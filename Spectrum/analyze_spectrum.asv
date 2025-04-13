@@ -1,0 +1,123 @@
+clc; clear; close all;
+
+%% 1. Đọc dữ liệu từ file âm thanh
+filename = 'ghi_am_5_phut_stereo2.wav'; % chỉnh lại đường dẫn nếu cần
+[data, fs] = audioread(filename); %data:[Nx2]
+left = data(:,1); % kênh trái
+right = data(:,2); % kênh phải
+
+%% 2. Vẽ tín hiệu trong miền thời gian
+t = (0:length(data)-1) / fs;
+figure;
+subplot(2,1,1);
+plot(t, left);
+title('Input Speech Signal');
+xlabel('Time (s)');
+ylabel('Amplitude');
+
+subplot(2,1,1);
+plot(t, right);
+title('Input Speech Signal');
+xlabel('Time (s)');
+ylabel('Amplitude');
+
+%% 3. Biến đổi Fourier (FFT)
+NFFT = 2^nextpow2(length(left));
+f = fs/2 * linspace(0, 1, NFFT/2 + 1);
+
+X_fft_left = fft(left, NFFT);
+X_mag_left = abs(X_fft_left(1:NFFT/2 + 1));
+
+X_fft_right = fft(right, NFFT);
+X_mag_right = abs(X_fft_right(1:NFFT/2 + 1));
+
+% Vẽ phổ FFT
+subplot(2,1,2);
+plot(f, X_mag);
+title('Single Sided Spectrum of the Speech Signal');
+xlabel('Frequency (Hz)');
+ylabel('Magnitude');
+
+figure;
+subplot(2,1,1);
+plot(f, X_mag_left);
+title('FFT Spectrum - Left Channel');
+Xlabel('Frequency (Hz)');
+ylabel('Magnitude');
+
+
+
+%% 4. Welch Power Spectral Density Estimate
+figure;
+% --- Ước lượng phổ bằng Welch (không cần Toolbox) ---
+win_len = 256;                  % độ dài cửa sổ
+overlap = win_len / 2;          % chồng lấn 50%
+nfft = 512;                     % số điểm FFT
+step = win_len - overlap;       
+n = (0:win_len-1)';
+win = 0.54 - 0.46 * cos(2 * pi * n / (win_len - 1));
+         
+num_frames = floor((length(data) - overlap) / step);
+
+pxx_welch = zeros(nfft, 1);
+
+for k = 1:num_frames
+    idx = (1:win_len) + (k-1)*step;
+    if idx(end) > length(data)
+        break;
+    end
+    segment = data(idx) .* win;
+    X = fft(segment, nfft);
+    P = abs(X).^2 / (sum(win.^2) * fs);
+    pxx_welch = pxx_welch + P;
+end
+
+pxx_welch = pxx_welch / num_frames;
+f_welch = (0:nfft-1)*(fs/nfft);
+
+% chỉ lấy phần phổ đơn biên
+n_half = floor(nfft/2) + 1;
+pxx_welch = pxx_welch(1:n_half);
+f_welch = f_welch(1:n_half);
+plot(f_welch/1000, 10*log10(pxx_welch));
+title('Welch Power Spectral Density Estimate');
+xlabel('Frequency (kHz)');
+ylabel('Power/Frequency (dB/Hz)');
+
+%% 5. Power Spectral Density (using periodogram)
+figure;
+% Tự tính Periodogram
+nfft = length(data);
+win = ones(nfft, 1);  % Cửa sổ hình chữ nhật (Rectangular)
+X = fft(data .* win, nfft);
+pxx = abs(X).^2 / (sum(win.^2) * fs);
+f_pxx = (0:nfft-1)*(fs/nfft);
+
+% Lấy phổ đơn biên
+n_half = floor(nfft/2) + 1;
+pxx = pxx(1:n_half);
+f_pxx = f_pxx(1:n_half);
+
+plot(f_pxx/1000, 10*log10(pxx));
+title('Power Spectral Density');
+xlabel('Frequency (kHz)');
+ylabel('Power/Frequency (dB/Hz)');
+
+%% 6. Periodogram PSD Estimate with Raw and Smoothed View 
+nfft = length(data);
+win = ones(nfft,1);  % cửa sổ hình chữ nhật
+X = fft(data .* win, nfft);
+pxx = abs(X).^2 / (sum(win.^2) * fs);
+f_pxx = (0:nfft-1)*(fs/nfft);
+
+% chỉ lấy phần phổ đơn biên
+n_half = floor(nfft/2) + 1;
+pxx = pxx(1:n_half);
+f_pxx = f_pxx(1:n_half);
+
+figure;
+plot(f_pxx/1000, 10*log10(pxx));
+title('Periodogram Power Spectral Density Estimate');
+xlabel('Frequency (kHz)');
+ylabel('Power/Frequency (dB/Hz)');
+
