@@ -1,9 +1,9 @@
 % ================= PHÂN TÍCH PSNR & PHỔ ===================
 
 % Đọc 3 file âm thanh (giữ nguyên stereo)
-[x_wav, fs1] = audioread("Track No07.wav");
-[x_mp3, fs2] = audioread("Track No07.mp3");
-[x_flac, fs3] = audioread("output_stereo_degree1.flac");
+[x_wav, fs1] = audioread("ghi_am_5_phut_stereo2.wav");
+[x_mp3, fs2] = audioread("ghi_am_5_phut_stereo2.mp3");
+[x_flac, fs3] = audioread("output_stereo_degree3.flac");
 
 % Kiểm tra sample rate
 if fs1 ~= fs2 || fs1 ~= fs3
