@@ -7,7 +7,6 @@
 ## Project Overview
 
 This project focuses on applying **FLAC** – a lossless audio compression codec – to real-world multimedia data. The goal is to **record, analyze, compress, compare**, and **enhance audio** using modern tools and techniques, maintaining both compression efficiency and sound quality.
----
 
 ## Tasks Completed
 
